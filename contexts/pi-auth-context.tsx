@@ -65,13 +65,31 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
       if (!Pi) throw new Error("Pi SDK غير متاح");
 
       setAuthMessage("جارٍ المصادقة...");
-      await Pi.init({ version: "2.0", sandbox: false });
+      await Pi.init({ version: "2.0", sandbox: true });
 
       const auth = await Pi.authenticate(
         ["username", "payments"],
         async (payment: any) => {
-          // تجاهل الـ incomplete payments تماماً
-          console.log("Skipping incomplete payment:", payment?.identifier);
+          // معالجة الـ incomplete payments
+          console.log("Incomplete payment found:", payment?.identifier);
+          if (!payment?.identifier) return;
+          
+          try {
+            // approve ثم complete الـ payment العالق
+            await fetch(`/api/payments/${payment.identifier}/approve`, { 
+              method: 'POST' 
+            });
+            
+            if (payment?.transaction?.txid) {
+              await fetch(`/api/payments/${payment.identifier}/complete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ txid: payment.transaction.txid }),
+              });
+            }
+          } catch (e) {
+            console.log("Could not handle incomplete payment:", e);
+          }
         }
       );
 
