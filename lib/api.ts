@@ -1,24 +1,3 @@
-/**
- * Global fetch-based client for making API requests.
- *
- * - Set auth with `setApiAuthToken(token)`; it injects the Authorization header.
- * - Parses JSON automatically; for 204 responses `data` is `null`.
- * - Returns `{ data, status, statusText, headers }`.
- * - On non-2xx, throws an Error with `status` and `data`.
- *
- * @example
- * import { api } from '@/lib/api';
- *
- * const createThing = async () => {
- *   const { data } = await api.post('/api/your-endpoint', { data: 'your data' });
- *   console.log(data);
- * };
- *
- * await api.get('/api/users');
- * await api.put('/api/user/123', { name: 'Updated' });
- * await api.delete('/api/user/123');
- */
-
 type FetchResponse<T> = {
   data: T;
   status: number;
@@ -43,7 +22,7 @@ const request = async <T = any>(
 ): Promise<FetchResponse<T>> => {
   const headers: Record<string, string> = {
     ...defaultHeaders,
-    ...(authToken ? { Authorization: authToken } : {}),
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     ...(init.headers as Record<string, string> | undefined),
   };
 
@@ -78,24 +57,20 @@ const request = async <T = any>(
 export const api = {
   get: <T = any>(url: string, init?: RequestInit) =>
     request<T>(url, { ...init, method: "GET" }),
-
   delete: <T = any>(url: string, init?: RequestInit) =>
     request<T>(url, { ...init, method: "DELETE" }),
-
   post: <T = any>(url: string, body?: any, init?: RequestInit) =>
     request<T>(url, {
       ...init,
       method: "POST",
       body: body === undefined ? init?.body : JSON.stringify(body),
     }),
-
   put: <T = any>(url: string, body?: any, init?: RequestInit) =>
     request<T>(url, {
       ...init,
       method: "PUT",
       body: body === undefined ? init?.body : JSON.stringify(body),
     }),
-
   patch: <T = any>(url: string, body?: any, init?: RequestInit) =>
     request<T>(url, {
       ...init,
