@@ -13,7 +13,7 @@ export async function POST(
 
   try {
     const { txid } = await req.json();
-    const res = await fetch(`https://api.testnet.minepi.com/v2/payments/${paymentId}/complete`, {
+    const res = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
       method: "POST",
       headers: {
         Authorization: `Key ${apiKey}`,
@@ -24,7 +24,7 @@ export async function POST(
 
     const text = await res.text();
     let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    try { data = JSON.parse(text); } catch { data = { raw: text, status: res.status }; }
 
     return NextResponse.json(data, { status: res.ok ? 200 : res.status });
   } catch (err: any) {
