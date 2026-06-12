@@ -9,16 +9,12 @@ export const BACKEND_CONFIG = {
 } as const;
 
 export const BACKEND_URLS = {
-  LOGIN: `${BACKEND_CONFIG.BASE_URL}/auth/login`,
-  LOGIN_PREVIEW: `${BACKEND_CONFIG.BASE_URL}/auth/login`,
-  GET_PRODUCTS: (appId: string) =>
-    `${BACKEND_CONFIG.BASE_URL}/products`,
-  GET_PAYMENT: (paymentId: string) =>
-    `${BACKEND_CONFIG.BASE_URL}/payments/${paymentId}`,
-  APPROVE_PAYMENT: (paymentId: string) =>
-    `${BACKEND_CONFIG.BASE_URL}/payments/${paymentId}/approve`,
-  COMPLETE_PAYMENT: (paymentId: string) =>
-    `${BACKEND_CONFIG.BASE_URL}/payments/${paymentId}/complete`,
+  LOGIN: `/api/auth/login`,
+  LOGIN_PREVIEW: `/api/auth/login`,
+  GET_PRODUCTS: (_appId: string) => `/api/products`,
+  GET_PAYMENT: (paymentId: string) => `/api/payments/${paymentId}`,
+  APPROVE_PAYMENT: (paymentId: string) => `/api/payments/${paymentId}/approve`,
+  COMPLETE_PAYMENT: (paymentId: string) => `/api/payments/${paymentId}/complete`,
 } as const;
 
 export const PI_PLATFORM_URLS = {} as const;
