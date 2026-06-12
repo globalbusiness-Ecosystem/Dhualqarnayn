@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --navy:        #0D1B2A;
+  --navy-deep:   #050C16;
+  --gold:        #C9A84C;
+  --gold-light:  #E2C47A;
+  --gold-dim:    #8B6F30;
+  --emerald:     #1B6B3A;
+  --emerald-mid: #228B4A;
+  --text-cream:  #F5ECD7;
+
+  --background: oklch(0.08 0.022 240);
+  --foreground: oklch(0.96 0.02 70);
+  --card: oklch(0.10 0.024 240);
+  --card-foreground: oklch(0.96 0.02 70);
+  --popover: oklch(0.10 0.024 240);
+  --popover-foreground: oklch(0.96 0.02 70);
+  --primary: oklch(0.72 0.12 75);
+  --primary-foreground: oklch(0.09 0.02 240);
+  --secondary: oklch(0.15 0.03 240);
+  --secondary-foreground: oklch(0.96 0.02 70);
+  --muted: oklch(0.14 0.02 240);
+  --muted-foreground: oklch(0.60 0.05 75);
+  --accent: oklch(0.33 0.09 150);
+  --accent-foreground: oklch(0.96 0.02 70);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.22 0.04 75 / 0.18);
+  --input: oklch(0.15 0.03 240);
+  --ring: oklch(0.72 0.12 75);
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --font-sans: 'Tajawal', sans-serif;
+  --font-serif: 'Amiri', serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; box-sizing: border-box; }
+  html {
+    background-color: #050C16;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Tajawal', sans-serif;
+    background-color: #050C16;
+    color: #F5ECD7;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ── Ticker ──────────────────────────── */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+  will-change: transform;
+}
+.ticker-track:hover { animation-play-state: paused; }
+
+/* ── Star twinkle ────────────────────── */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.06; transform: scale(0.5); }
+  50%       { opacity: 1;   transform: scale(1.9); }
+}
+.star {
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* ── Crescent float ──────────────────── */
+@keyframes crescentFloat {
+  0%, 100% { transform: translateY(0px) rotate(-4deg); }
+  50%       { transform: translateY(-10px) rotate(4deg); }
+}
+.crescent { animation: crescentFloat 8s ease-in-out infinite; }
+
+/* ── Prayer pulse ────────────────────── */
+@keyframes prayerPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(27,107,58,0.8); }
+  70%  { box-shadow: 0 0 0 10px rgba(27,107,58,0); }
+  100% { box-shadow: 0 0 0 0   rgba(27,107,58,0); }
+}
+.prayer-active-pulse { animation: prayerPulse 2s ease-out infinite; }
+
+/* ── Active prayer glow ──────────────── */
+@keyframes activeGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27,107,58,0.45); }
+  50%       { box-shadow: 0 0 18px 3px rgba(27,107,58,0.22); }
+}
+.prayer-row-active { animation: activeGlow 2.2s ease-in-out infinite; }
+
+/* ── Gold shimmer ────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -240% center; }
+  100% { background-position:  240% center; }
+}
+.gold-shimmer {
+  background: linear-gradient(90deg, #7A5E22 0%, #F0D880 25%, #C9A84C 50%, #F0D880 75%, #7A5E22 100%);
+  background-size: 240% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+
+/* ── Fade up ─────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.5s ease-out both; }
+
+/* ── Shooting star ───────────────────── */
+@keyframes shoot {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  8%   { opacity: 0.85; }
+  100% { transform: translate(-180px, 55px); opacity: 0; }
+}
+
+/* ── Live dot ────────────────────────── */
+@keyframes livePulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.live-dot { animation: livePulse 1.5s ease-in-out infinite; }
+
+/* ── Layout helpers ──────────────────── */
+.ornament-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.13), transparent);
+}
+.section-bar {
+  width: 3px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #C9A84C 0%, #7A5E22 100%);
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar       { width: 2px; height: 2px; }
+::-webkit-scrollbar-track { background: #050C16; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.1); border-radius: 2px; }
+.nav-active svg { filter: drop-shadow(0 0 5px rgba(201,168,76,0.5)); }
