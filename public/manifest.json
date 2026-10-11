@@ -1,0 +1,53 @@
+{
+  "name": "ذو القرنين — بوابتك الإسلامية الشاملة",
+  "short_name": "ذو القرنين",
+  "description": "تطبيق إسلامي شامل: القرآن الكريم وتفسيره، الحديث، مواقيت الصلاة، القبلة، الأذكار، الفقه، الزكاة، المواريث، والسيرة النبوية.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1B2A",
+  "theme_color": "#0D1B2A",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["education", "lifestyle", "reference"],
+  "id": "/",
+  "icons": [
+    {
+      "src": "/icon-dark-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": []
+}

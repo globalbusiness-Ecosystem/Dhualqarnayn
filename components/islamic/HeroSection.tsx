@@ -1,54 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-interface Prayer { name: string; nameAr: string; time: string; }
-
-const PRAYERS: Prayer[] = [
-  { name: "fajr",    nameAr: "الفجر",  time: "04:32" },
-  { name: "sunrise", nameAr: "الشروق", time: "06:08" },
-  { name: "dhuhr",   nameAr: "الظهر",  time: "12:15" },
-  { name: "asr",     nameAr: "العصر",  time: "15:42" },
-  { name: "maghrib", nameAr: "المغرب", time: "18:28" },
-  { name: "isha",    nameAr: "العشاء", time: "19:58" },
-];
-
-function toAr(s: string | number) {
-  return String(s).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
-}
+import { useThemeMode } from "@/contexts/theme-mode-context";
+import { usePrayerTimes } from "@/contexts/prayer-times-context";
+import { PRAYERS, toArDigits as toAr, getCurrentPrayerIdx, getNextPrayer } from "@/lib/prayer-times";
 
 function getHijriDate(): string {
   try {
-    return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
-      calendar: "islamic", year: "numeric", month: "long", day: "numeric",
+    return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+      year: "numeric", month: "long", day: "numeric",
     }).format(new Date()) + " هـ";
   } catch { return "١٤ رجب ١٤٤٦ هـ"; }
-}
-
-function getCurrentPrayerIdx(): number {
-  const now = new Date();
-  const cur = now.getHours() * 60 + now.getMinutes();
-  let idx = 0;
-  for (let i = 0; i < PRAYERS.length; i++) {
-    const [h, m] = PRAYERS[i].time.split(":").map(Number);
-    if (cur >= h * 60 + m) idx = i;
-  }
-  return idx;
-}
-
-function getNextPrayer(idx: number): { nameAr: string; countdown: string } {
-  const nextIdx = (idx + 1) % PRAYERS.length;
-  const now = new Date();
-  const cur = now.getHours() * 60 + now.getMinutes();
-  const [h, m] = PRAYERS[nextIdx].time.split(":").map(Number);
-  let diff = h * 60 + m - cur;
-  if (diff < 0) diff += 24 * 60;
-  const hrs = Math.floor(diff / 60);
-  const mins = diff % 60;
-  return {
-    nameAr: PRAYERS[nextIdx].nameAr,
-    countdown: hrs > 0 ? `${toAr(hrs)}س ${toAr(mins)}د` : `${toAr(mins)} دقيقة`,
-  };
 }
 
 /* ── Prayer icons ──────────────────────────── */
@@ -262,6 +224,9 @@ function MosqueSVG() {
 
 /* ── Main HeroSection ──────────────────────── */
 export default function HeroSection() {
+  const { resolvedTheme } = useThemeMode();
+  const { version: prayerVersion } = usePrayerTimes();
+  const isDay = resolvedTheme === "day";
   const [hijriDate, setHijriDate] = useState("");
   const [clockTime, setClockTime] = useState("");
   const [prayerIdx, setPrayerIdx] = useState(2);
@@ -279,47 +244,86 @@ export default function HeroSection() {
     tick();
     const iv = setInterval(tick, 30_000);
     return () => clearInterval(iv);
-  }, []);
+  }, [prayerVersion]);
 
   return (
     <section className="relative overflow-hidden" style={{ minHeight: 570 }}>
       {/* Sky gradient */}
       <div className="absolute inset-0" style={{
-        background: "linear-gradient(180deg, #000B18 0%, #011320 12%, #052030 26%, #0A2E42 42%, #0F4038 58%, #155535 74%, #1B6B3A 100%)",
+        background: isDay
+          ? "linear-gradient(180deg, #2E6FA6 0%, #4B8CBE 14%, #7BAED0 30%, #AED0C8 48%, #C9D8A8 64%, #A8C878 80%, #1B6B3A 100%)"
+          : "linear-gradient(180deg, #000B18 0%, #011320 12%, #052030 26%, #0A2E42 42%, #0F4038 58%, #155535 74%, #1B6B3A 100%)",
+        transition: "background 0.6s ease",
       }} />
 
-      {/* Stars */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <StarField />
-      </div>
+      {/* Stars (night only) */}
+      {!isDay && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <StarField />
+        </div>
+      )}
 
-      {/* Shooting star */}
-      <div className="absolute pointer-events-none" style={{ top: "10%", right: "26%" }}>
-        <div style={{
-          width: 65, height: 1.5,
-          background: "linear-gradient(90deg, transparent, #E2C47A)",
-          borderRadius: 2, opacity: 0.7,
-          animation: "shoot 8s ease-out 4s infinite",
-        }} />
-      </div>
+      {/* Clouds (day only) */}
+      {isDay && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.8 }}>
+          {[{ top: "9%", left: "8%", w: 70 }, { top: "16%", left: "58%", w: 54 }, { top: "24%", left: "22%", w: 44 }].map((c, i) => (
+            <svg key={i} width={c.w} height={c.w * 0.4} viewBox="0 0 70 28" style={{ position: "absolute", top: c.top, left: c.left }}>
+              <ellipse cx="18" cy="18" rx="16" ry="9" fill="#FFFFFF" opacity="0.75" />
+              <ellipse cx="34" cy="12" rx="18" ry="11" fill="#FFFFFF" opacity="0.85" />
+              <ellipse cx="50" cy="18" rx="15" ry="8.5" fill="#FFFFFF" opacity="0.75" />
+            </svg>
+          ))}
+        </div>
+      )}
 
-      {/* Crescent moon */}
+      {/* Shooting star (night only) */}
+      {!isDay && (
+        <div className="absolute pointer-events-none" style={{ top: "10%", right: "26%" }}>
+          <div style={{
+            width: 65, height: 1.5,
+            background: "linear-gradient(90deg, transparent, #E2C47A)",
+            borderRadius: 2, opacity: 0.7,
+            animation: "shoot 8s ease-out 4s infinite",
+          }} />
+        </div>
+      )}
+
+      {/* Crescent moon / Sun */}
       <div className="absolute crescent pointer-events-none"
-        style={{ top: "7%", right: "6%", filter: "drop-shadow(0 0 16px rgba(201,168,76,0.65))" }}>
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <defs>
-            <radialGradient id="moonR" cx="38%" cy="26%" r="65%">
-              <stop offset="0%" stopColor="#FFFCEC"/>
-              <stop offset="50%" stopColor="#EAC96A"/>
-              <stop offset="100%" stopColor="#B8962E"/>
-            </radialGradient>
-          </defs>
-          <path d="M36 10 C27 10 21 18 21 28.5 C21 39 27 46 36 46 C30 42.5 25 36.5 25 28.5 C25 20.5 30 14 36 10Z"
-            fill="url(#moonR)"/>
-          <circle cx="17" cy="17" r="1.2" fill="#FFFCE8" opacity="0.65"/>
-          <circle cx="14" cy="30" r="0.8" fill="#FFFCE8" opacity="0.45"/>
-          <circle cx="41" cy="9" r="0.9" fill="#FFFCE8" opacity="0.6"/>
-        </svg>
+        style={{ top: "7%", right: "6%", filter: isDay ? "drop-shadow(0 0 22px rgba(255,214,120,0.75))" : "drop-shadow(0 0 16px rgba(201,168,76,0.65))" }}>
+        {isDay ? (
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <defs>
+              <radialGradient id="sunR" cx="42%" cy="38%" r="65%">
+                <stop offset="0%" stopColor="#FFFBE0" />
+                <stop offset="55%" stopColor="#FFD86A" />
+                <stop offset="100%" stopColor="#F0A830" />
+              </radialGradient>
+            </defs>
+            <circle cx="28" cy="26" r="13" fill="url(#sunR)" />
+            {Array.from({ length: 8 }, (_, i) => {
+              const ang = (i * Math.PI * 2) / 8;
+              const x1 = 28 + Math.cos(ang) * 17, y1 = 26 + Math.sin(ang) * 17;
+              const x2 = 28 + Math.cos(ang) * 23, y2 = 26 + Math.sin(ang) * 23;
+              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FFD86A" strokeWidth="2.2" strokeLinecap="round" opacity="0.8" />;
+            })}
+          </svg>
+        ) : (
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <defs>
+              <radialGradient id="moonR" cx="38%" cy="26%" r="65%">
+                <stop offset="0%" stopColor="#FFFCEC"/>
+                <stop offset="50%" stopColor="#EAC96A"/>
+                <stop offset="100%" stopColor="#B8962E"/>
+              </radialGradient>
+            </defs>
+            <path d="M36 10 C27 10 21 18 21 28.5 C21 39 27 46 36 46 C30 42.5 25 36.5 25 28.5 C25 20.5 30 14 36 10Z"
+              fill="url(#moonR)"/>
+            <circle cx="17" cy="17" r="1.2" fill="#FFFCE8" opacity="0.65"/>
+            <circle cx="14" cy="30" r="0.8" fill="#FFFCE8" opacity="0.45"/>
+            <circle cx="41" cy="9" r="0.9" fill="#FFFCE8" opacity="0.6"/>
+          </svg>
+        )}
       </div>
 
       {/* Top-left geometric ornament */}
@@ -341,18 +345,18 @@ export default function HeroSection() {
         {/* Bismillah pill */}
         <div className="fade-up flex items-center gap-2 mb-4 px-5 py-2 rounded-full"
           style={{
-            background: "rgba(201,168,76,0.07)",
-            border: "1px solid rgba(201,168,76,0.24)",
+            background: isDay ? "rgba(13,27,42,0.16)" : "rgba(201,168,76,0.07)",
+            border: `1px solid ${isDay ? "rgba(13,27,42,0.3)" : "rgba(201,168,76,0.24)"}`,
             backdropFilter: "blur(10px)",
           }}>
           <svg width="7" height="7" viewBox="0 0 10 10">
-            <polygon points="5,0.5 6.1,3.5 9.5,3.6 7,5.5 7.8,9 5,7.2 2.2,9 3,5.5 0.5,3.6 3.9,3.5" fill="#C9A84C" opacity="0.8"/>
+            <polygon points="5,0.5 6.1,3.5 9.5,3.6 7,5.5 7.8,9 5,7.2 2.2,9 3,5.5 0.5,3.6 3.9,3.5" fill={isDay ? "#0D1B2A" : "#C9A84C"} opacity="0.8"/>
           </svg>
-          <span style={{ fontFamily: "'Amiri', serif", color: "#C9A84C", fontSize: 14.5, letterSpacing: "0.04em", textShadow: "0 0 16px rgba(201,168,76,0.35)" }}>
+          <span style={{ fontFamily: "'Amiri', serif", color: isDay ? "#0D1B2A" : "#C9A84C", fontSize: 14.5, letterSpacing: "0.04em", textShadow: isDay ? "none" : "0 0 16px rgba(201,168,76,0.35)" }}>
             بسم الله الرحمن الرحيم
           </span>
           <svg width="7" height="7" viewBox="0 0 10 10">
-            <polygon points="5,0.5 6.1,3.5 9.5,3.6 7,5.5 7.8,9 5,7.2 2.2,9 3,5.5 0.5,3.6 3.9,3.5" fill="#C9A84C" opacity="0.8"/>
+            <polygon points="5,0.5 6.1,3.5 9.5,3.6 7,5.5 7.8,9 5,7.2 2.2,9 3,5.5 0.5,3.6 3.9,3.5" fill={isDay ? "#0D1B2A" : "#C9A84C"} opacity="0.8"/>
           </svg>
         </div>
 
@@ -360,11 +364,11 @@ export default function HeroSection() {
         <div className="fade-up text-center mb-3" style={{ animationDelay: "0.1s" }}>
           <h2 className="text-balance" style={{
             fontFamily: "'Amiri', serif",
-            color: "#F5ECD7",
+            color: isDay ? "#0D1B2A" : "#F5ECD7",
             fontWeight: 700,
             fontSize: "clamp(26px, 7.5vw, 36px)",
             lineHeight: 1.55,
-            textShadow: "0 2px 28px rgba(0,0,0,0.95), 0 0 50px rgba(201,168,76,0.06)",
+            textShadow: isDay ? "0 2px 18px rgba(255,255,255,0.5)" : "0 2px 28px rgba(0,0,0,0.95), 0 0 50px rgba(201,168,76,0.06)",
             direction: "rtl",
           }}>
             مرحباً بك في ذو القرنين
@@ -374,8 +378,8 @@ export default function HeroSection() {
         {/* Hijri date + clock */}
         <div className="fade-up flex items-center gap-2.5 mb-3 px-4 py-2 rounded-full"
           style={{
-            background: "rgba(4,10,22,0.76)",
-            border: "1px solid rgba(201,168,76,0.2)",
+            background: isDay ? "rgba(255,255,255,0.55)" : "rgba(4,10,22,0.76)",
+            border: `1px solid ${isDay ? "rgba(13,27,42,0.22)" : "rgba(201,168,76,0.2)"}`,
             backdropFilter: "blur(12px)",
             animationDelay: "0.17s",
           }}>

@@ -6,14 +6,34 @@ import { PRODUCT_CONFIG } from "@/lib/product-config";
 
 const FEATURES = [
   { id: "quran",   title: "القرآن الكريم", sub: "١١٤ سورة · ٦٢٣٦ آية",       desc: "اقرأ واستمع لكامل القرآن بتلاوات متعددة مع التفسير",  accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "tafsir",  title: "التفسير",      sub: "معاني السور الميسرة",          desc: "تفسير ميسر لجميع سور القرآن الكريم مع بيان موضوع كل سورة", accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "fiqh",    title: "الفقه",        sub: "أحكام العبادات والمعاملات",    desc: "مسائل فقهية مصنفة في الطهارة والصلاة والزكاة والصيام والحج والمعاملات", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
   { id: "hadith",  title: "الأحاديث",      sub: "البخاري · مسلم · الترمذي",   desc: "أحاديث مصنفة ومحققة مع الشرح والسند والحكم",          accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "dhikr",   title: "الأذكار",       sub: "الصباح والمساء وغيرها",        desc: "أذكار مأثورة كاملة مع عداد الذكر التفاعلي",           accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "duas",    title: "الأدعية",       sub: "قرآنية ونبوية جامعة",          desc: "أدعية مأثورة لكل حال من القرآن والسنة الصحيحة",       accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "prayer",  title: "مواقيت الصلاة", sub: "الوقت الحالي والصلاة القادمة", desc: "تابع مواقيت الصلوات الخمس مع عدّاد للصلاة القادمة",   accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
   { id: "qibla",   title: "القبلة",        sub: "الاتجاه الدقيق",               desc: "حدد اتجاه القبلة بدقة باستخدام البوصلة الإسلامية",   accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
-  { id: "dhikr",   title: "الأذكار",       sub: "الصباح والمساء",               desc: "أذكار مأثورة مع عداد الذكر وأدعية مباركة",           accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
-  { id: "history", title: "التاريخ",       sub: "سيرة وحضارة إسلامية",         desc: "استعرض تاريخ الإسلام العريق من صدر الإسلام",         accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "zakat",   title: "حاسبة الزكاة",  sub: "احسب زكاة مالك بدقة",          desc: "حاسبة شاملة لزكاة النقد والذهب والفضة والأسهم والعروض التجارية حسب نصاب كل نوع", accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "mosques", title: "المساجد القريبة", sub: "أقرب مسجد في أي مكان",        desc: "استخدم موقعك لإيجاد أقرب المساجد إليك في أي بلد بالعالم مع خطوط السير", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "asma",    title: "أسماء الله الحسنى", sub: "٩٩ اسماً بالمعنى والفضل",   desc: "تعرّف على أسماء الله الحسنى كاملة مع شرح المعنى وأثر كل اسم", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "history", title: "التاريخ",       sub: "سيرة وحضارة إسلامية",         desc: "استعرض تاريخ الإسلام العريق من صدر الإسلام",         accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "prophets",title: "الأنبياء والرسل", sub: "سيرة ٢٥ نبياً ورسولاً",        desc: "تعرّف على قصص الأنبياء والرسل عليهم السلام كاملة",   accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
   { id: "cal",     title: "التقويم",       sub: "المناسبات الإسلامية",          desc: "تتبع الأعياد والأشهر الهجرية المباركة",              accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "dawah",   title: "الدعوة",        sub: "تعريف بالإسلام ودعوة إليه",     desc: "أركان الإسلام والإيمان، كيفية الدخول في الإسلام، أسئلة شائعة ورسائل دعوية جاهزة", accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "ramadan", title: "رمضان والحج",  sub: "دليل عملي للموسمين",            desc: "فضائل رمضان وبرنامجه اليومي، وخطوات الحج والعمرة بالترتيب مع الأدعية", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "sermons", title: "الخطب والوعظ", sub: "جمعة ومواعظ وعلماء عالميون",    desc: "خطب جمعة مصنفة حسب الموضوع، ودليل بأبرز العلماء والدعاة المعروفين بوعظهم مع روابط لمحاضراتهم الأصلية", accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "mawareth", title: "المواريث",   sub: "حاسبة توزيع التركة",            desc: "احسب توزيع التركة على الورثة وفق أحكام الفرائض، مع بيان نصيب كل وارث وسببه الشرعي", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
+  { id: "seerah",   title: "السيرة النبوية", sub: "محطات حياة النبي ﷺ",       desc: "رحلة كاملة في سيرة النبي محمد ﷺ من الولادة إلى الوفاة، بأهم محطاتها وعبرها", accent: "#228B4A", bg: "rgba(27,107,58,0.06)",  bdr: "rgba(27,107,58,0.2)",  bdrA: "rgba(27,107,58,0.48)" },
+  { id: "glossary", title: "معجم المصطلحات", sub: "شرح المصطلحات الإسلامية",   desc: "معجم ميسر يشرح أهم المصطلحات في العقيدة والعبادة والفقه والقرآن والحديث", accent: "#C9A84C", bg: "rgba(201,168,76,0.06)", bdr: "rgba(201,168,76,0.2)", bdrA: "rgba(201,168,76,0.42)" },
 ];
 
-export default function FeatureCards() {
+interface Props {
+  onOpen?: (id: string) => void;
+}
+
+const NAVIGABLE = new Set(["quran", "tafsir", "fiqh", "hadith", "dhikr", "duas", "qibla", "prayer", "zakat", "mosques", "cal", "asma", "history", "prophets", "dawah", "ramadan", "sermons", "mawareth", "seerah", "glossary"]);
+
+export default function FeatureCards({ onOpen }: Props) {
   const [active, setActive] = useState<string | null>(null);
 
   return (
@@ -32,9 +52,10 @@ export default function FeatureCards() {
       <div className="grid grid-cols-2 gap-2.5">
         {FEATURES.map((f) => {
           const open = active === f.id;
+          const navigable = NAVIGABLE.has(f.id) && onOpen;
           return (
             <button key={f.id}
-              onClick={() => setActive(open ? null : f.id)}
+              onClick={() => (navigable ? onOpen!(f.id) : setActive(open ? null : f.id))}
               className="text-right rounded-2xl p-4 transition-all active:scale-95"
               style={{
                 background: open ? f.bg : "linear-gradient(145deg, rgba(14,24,40,0.75), rgba(9,16,28,0.88))",

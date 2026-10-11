@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { dhikrCounterStore, type DhikrCounterState } from "@/lib/azkar-store";
+import { playTapSound, playCompleteSound, primeAudio } from "@/lib/tap-sound";
 
 const DHIKR = [
   { text: "سبحان الله",      count: 33,  color: "#C9A84C", virtue: "تسبيح" },
@@ -8,27 +10,46 @@ const DHIKR = [
   { text: "الله أكبر",       count: 34,  color: "#C9A84C", virtue: "تكبير" },
   { text: "لا إله إلا الله", count: 100, color: "#228B4A", virtue: "توحيد" },
   { text: "أستغفر الله",     count: 100, color: "#C9A84C", virtue: "استغفار" },
+  { text: "لا حول ولا قوة إلا بالله", count: 10, color: "#228B4A", virtue: "كنز من كنوز الجنة" },
 ];
 
 const toAr = (n: number) => String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
 
 export default function DhikrCounter() {
-  const [sel, setSel] = useState(0);
+  const [saved, setSaved] = useState<DhikrCounterState>(dhikrCounterStore.getState());
   const [count, setCount] = useState(0);
-  const [sessions, setSessions] = useState(0);
   const [tapped, setTapped] = useState(false);
 
-  const cur = DHIKR[sel];
+  useEffect(() => {
+    dhikrCounterStore.load();
+    return dhikrCounterStore.subscribe(setSaved);
+  }, []);
+
+  const sel = saved.selectedIndex;
+  const sessions = saved.sessions;
+  const setSel = (i: number) => dhikrCounterStore.update({ selectedIndex: i });
+
+  const cur = DHIKR[sel] ?? DHIKR[0];
   const done = count >= cur.count;
   const progress = Math.min(count / cur.count, 1);
   const R = 58;
   const circ = 2 * Math.PI * R;
 
   const handleTap = () => {
-    if (done) { setCount(0); setSessions((s) => s + 1); return; }
+    primeAudio();
+    if (done) {
+      setCount(0);
+      dhikrCounterStore.update({ sessions: saved.sessions + 1, lifetimeCount: saved.lifetimeCount + cur.count });
+      return;
+    }
     setTapped(true);
     setTimeout(() => setTapped(false), 120);
-    setCount((c) => c + 1);
+    setCount((c) => {
+      const next = c + 1;
+      if (next >= cur.count) playCompleteSound();
+      else playTapSound();
+      return next;
+    });
   };
 
   return (

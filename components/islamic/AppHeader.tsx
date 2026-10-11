@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 import SidebarMenu from "./SidebarMenu";
+import { useLanguage } from "@/contexts/language-context";
+import { useThemeMode } from "@/contexts/theme-mode-context";
 
-export default function AppHeader() {
+interface Props {
+  activeTab?: string;
+  onNavigate?: (tab: string) => void;
+  onInstall?: () => void;
+}
+
+export default function AppHeader({ activeTab, onNavigate, onInstall }: Props) {
+  const { t, dir } = useLanguage();
+  const { resolvedTheme } = useThemeMode();
+  const isDay = resolvedTheme === "day";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bellActive, setBellActive] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
@@ -21,11 +32,12 @@ export default function AppHeader() {
         style={{
           maxWidth: 480,
           margin: "0 auto",
-          background: "rgba(3,8,18,0.98)",
-          borderBottom: "1px solid rgba(201,168,76,0.11)",
+          background: isDay ? "rgba(250,246,236,0.97)" : "rgba(3,8,18,0.98)",
+          borderBottom: `1px solid ${isDay ? "rgba(13,27,42,0.12)" : "rgba(201,168,76,0.11)"}`,
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          boxShadow: "0 2px 28px rgba(0,0,0,0.7)",
+          boxShadow: isDay ? "0 2px 20px rgba(13,27,42,0.08)" : "0 2px 28px rgba(0,0,0,0.7)",
+          transition: "background 0.4s ease",
         }}
       >
         {/* Top gold line */}
@@ -38,21 +50,21 @@ export default function AppHeader() {
           {/* Hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
-            aria-label="فتح القائمة"
+            aria-label={t("menu_title")}
             className="flex flex-col items-center justify-center gap-[5px] rounded-xl active:scale-90 transition-transform"
             style={{
               width: 42, height: 42,
-              background: "rgba(201,168,76,0.05)",
-              border: "1px solid rgba(201,168,76,0.14)",
+              background: isDay ? "rgba(13,27,42,0.06)" : "rgba(201,168,76,0.05)",
+              border: `1px solid ${isDay ? "rgba(13,27,42,0.14)" : "rgba(201,168,76,0.14)"}`,
             }}
           >
-            <span style={{ display: "block", width: 18, height: 1.5, background: "#C9A84C", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 13, height: 1.5, background: "rgba(201,168,76,0.45)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 18, height: 1.5, background: "#C9A84C", borderRadius: 2 }} />
+            <span style={{ display: "block", width: 18, height: 1.5, background: isDay ? "#0D1B2A" : "#C9A84C", borderRadius: 2 }} />
+            <span style={{ display: "block", width: 13, height: 1.5, background: isDay ? "rgba(13,27,42,0.45)" : "rgba(201,168,76,0.45)", borderRadius: 2 }} />
+            <span style={{ display: "block", width: 18, height: 1.5, background: isDay ? "#0D1B2A" : "#C9A84C", borderRadius: 2 }} />
           </button>
 
           {/* Center logo */}
-          <div className="flex flex-col items-center" dir="rtl">
+          <div className="flex flex-col items-center" dir={dir}>
             <div className="flex items-center gap-1.5 mb-0.5">
               <div style={{ width: 22, height: 1, background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.35))" }} />
               <svg width="7" height="7" viewBox="0 0 10 10">
@@ -69,16 +81,16 @@ export default function AppHeader() {
                 lineHeight: 1.15,
               }}
             >
-              ذو القرنين
+              {t("app_name")}
             </h1>
             <p style={{
               fontFamily: "'Tajawal', sans-serif",
-              color: "rgba(201,168,76,0.55)",
+              color: isDay ? "rgba(13,27,42,0.55)" : "rgba(201,168,76,0.55)",
               fontSize: 10,
               marginTop: 1,
               letterSpacing: "0.02em",
             }}>
-              بوابتك الإسلامية الشاملة
+              {t("app_tagline")}
             </p>
           </div>
 
@@ -86,19 +98,19 @@ export default function AppHeader() {
           <div className="relative">
             <button
               onClick={handleBell}
-              aria-label="الإشعارات"
+              aria-label={t("notifications")}
               className="flex items-center justify-center rounded-xl active:scale-90 transition-all"
               style={{
                 width: 42, height: 42,
-                background: bellActive ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.05)",
-                border: `1px solid ${bellActive ? "rgba(201,168,76,0.3)" : "rgba(201,168,76,0.14)"}`,
+                background: bellActive ? "rgba(201,168,76,0.1)" : isDay ? "rgba(13,27,42,0.06)" : "rgba(201,168,76,0.05)",
+                border: `1px solid ${bellActive ? "rgba(201,168,76,0.3)" : isDay ? "rgba(13,27,42,0.14)" : "rgba(201,168,76,0.14)"}`,
                 transform: bellActive ? "rotate(-12deg)" : "rotate(0)",
                 transition: "all 0.15s ease",
               }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"
-                  stroke={bellActive ? "#C9A84C" : "#8A7040"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  stroke={bellActive ? "#C9A84C" : isDay ? "#0D1B2A" : "#8A7040"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="absolute flex items-center justify-center rounded-full" style={{
                 top: 4, right: 4, width: 14, height: 14,
@@ -119,7 +131,7 @@ export default function AppHeader() {
                   transform: "translateX(calc(-100% + 42px))",
                 }}>
                 <div className="px-4 py-2.5" style={{ borderBottom: "1px solid rgba(201,168,76,0.08)" }}>
-                  <p style={{ fontFamily: "'Tajawal',sans-serif", color: "#C9A84C", fontSize: 12, fontWeight: 700 }}>الإشعارات</p>
+                  <p style={{ fontFamily: "'Tajawal',sans-serif", color: "#C9A84C", fontSize: 12, fontWeight: 700 }}>{t("notifications")}</p>
                 </div>
                 {[
                   { text: "حان وقت صلاة الظهر", time: "الآن" },
@@ -137,7 +149,13 @@ export default function AppHeader() {
         </div>
       </header>
 
-      <SidebarMenu isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <SidebarMenu
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeTab={activeTab}
+        onNavigate={onNavigate}
+        onInstall={onInstall}
+      />
     </>
   );
 }
