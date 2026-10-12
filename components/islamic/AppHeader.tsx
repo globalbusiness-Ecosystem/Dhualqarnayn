@@ -30,7 +30,7 @@ export default function AppHeader({ activeTab, onNavigate, onInstall }: Props) {
       <header
         className="fixed top-0 left-0 right-0 z-50"
         style={{
-          maxWidth: 480,
+          maxWidth: "var(--app-max-w)",
           margin: "0 auto",
           background: isDay ? "rgba(250,246,236,0.97)" : "rgba(3,8,18,0.98)",
           borderBottom: `1px solid ${isDay ? "rgba(13,27,42,0.12)" : "rgba(201,168,76,0.11)"}`,

@@ -241,7 +241,7 @@ export default function FiqhBrowser({ onBack }: Props) {
             </div>
           )
         ) : (
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
             {FIQH_CATEGORIES.map((c) => {
               const count = FIQH_DATA.filter((e) => e.categoryId === c.id).length;
               return (

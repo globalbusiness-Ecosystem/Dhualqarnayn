@@ -175,3 +175,15 @@
 ::-webkit-scrollbar-track { background: #050C16; }
 ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.1); border-radius: 2px; }
 .nav-active svg { filter: drop-shadow(0 0 5px rgba(201,168,76,0.5)); }
+
+/* ── Responsive app shell (phone -> tablet -> desktop) ───────────── */
+:root { --app-max-w: 480px; }
+@media (min-width: 768px)  { :root { --app-max-w: 680px; } }
+@media (min-width: 1100px) { :root { --app-max-w: 860px; } }
+@media (min-width: 768px) {
+  .dq-shell {
+    border-left: 1px solid rgba(201, 168, 76, 0.10);
+    border-right: 1px solid rgba(201, 168, 76, 0.10);
+    box-shadow: 0 0 90px rgba(0, 0, 0, 0.55);
+  }
+}

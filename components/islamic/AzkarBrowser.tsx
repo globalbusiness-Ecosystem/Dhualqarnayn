@@ -150,7 +150,7 @@ export default function AzkarBrowser({ onBack }: Props) {
       )}
 
       {!showingList && (
-        <div className="px-4 py-4 grid grid-cols-2 gap-2.5">
+        <div className="px-4 py-4 grid grid-cols-2 md:grid-cols-3 gap-2.5">
           {AZKAR_CATEGORIES.map((cat) => {
             const count = AZKAR.filter((z) => z.categoryId === cat.id).length;
             const doneToday = progress.completedToday[cat.id] === today;

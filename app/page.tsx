@@ -131,12 +131,12 @@ export default function HomePage() {
   const showGlossary = activeTab === "glossary";
 
   return (
-    <div style={{
+    <div className="dq-shell" style={{
       minHeight: "100vh",
       background: "#050C16",
       color: "#F5ECD7",
       fontFamily: "'Tajawal', sans-serif",
-      maxWidth: 480,
+      maxWidth: "var(--app-max-w)",
       margin: "0 auto",
       position: "relative",
     }}>

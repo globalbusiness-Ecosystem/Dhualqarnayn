@@ -62,7 +62,7 @@ export default function BottomNav({ activeTab, onChange }: Props) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        maxWidth: 480, margin: "0 auto",
+        maxWidth: "var(--app-max-w)", margin: "0 auto",
         background: isDay ? "rgba(250,246,236,0.97)" : "rgba(4,9,18,0.98)",
         borderTop: `1px solid ${isDay ? "rgba(13,27,42,0.1)" : "rgba(201,168,76,0.1)"}`,
         backdropFilter: "blur(22px)",

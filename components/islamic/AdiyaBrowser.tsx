@@ -100,7 +100,7 @@ export default function AdiyaBrowser({ onBack }: Props) {
       )}
 
       {!showingList && (
-        <div className="px-4 py-4 grid grid-cols-2 gap-2.5">
+        <div className="px-4 py-4 grid grid-cols-2 md:grid-cols-3 gap-2.5">
           {DUA_CATEGORIES.map((cat, i) => {
             const count = ADIYA.filter((d) => d.categoryId === cat.id).length;
             return (

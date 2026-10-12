@@ -49,7 +49,7 @@ export default function FeatureCards({ onOpen }: Props) {
         </svg>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
         {FEATURES.map((f) => {
           const open = active === f.id;
           const navigable = NAVIGABLE.has(f.id) && onOpen;

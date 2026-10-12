@@ -261,7 +261,7 @@ export default function HadithBrowser({ onBack }: Props) {
       )}
 
       {!showingList && mode === "categories" && (
-        <div className="px-4 py-4 grid grid-cols-2 gap-2.5">
+        <div className="px-4 py-4 grid grid-cols-2 md:grid-cols-3 gap-2.5">
           {HADITH_CATEGORIES.map((cat, i) => {
             const count = HADITHS.filter((h) => h.categoryId === cat.id).length;
             const accent = i % 2 === 0 ? "#C9A84C" : "#228B4A";

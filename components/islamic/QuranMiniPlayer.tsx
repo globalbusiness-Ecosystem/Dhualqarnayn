@@ -23,7 +23,7 @@ export default function QuranMiniPlayer() {
       className="fixed left-0 right-0 z-40 px-3"
       style={{
         bottom: "calc(64px + env(safe-area-inset-bottom, 4px))",
-        maxWidth: 480,
+        maxWidth: "var(--app-max-w)",
         margin: "0 auto",
       }}
     >
