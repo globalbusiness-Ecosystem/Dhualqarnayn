@@ -9,11 +9,15 @@ interface ShareButtonProps {
   compact?: boolean;
 }
 
+const SITE_TITLE = "ذو القرنين";
+const SITE_TEXT = "ذو القرنين - بوابتك الإسلامية الشاملة";
+
 export default function ShareButton({ data, label = "مشاركة", compact }: ShareButtonProps) {
   const [busy, setBusy] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [failed, setFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   async function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -35,24 +39,45 @@ export default function ShareButton({ data, label = "مشاركة", compact }: S
     }
   }
 
+  function download() {
+    if (!previewUrl) return;
+    const a = document.createElement("a");
+    a.href = previewUrl;
+    a.download = "dhualqarnayn.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   async function doShare() {
     if (!blob) return;
     const file = new File([blob], "dhualqarnayn.png", { type: "image/png" });
     const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
     if (nav.share && nav.canShare?.({ files: [file] })) {
       try {
-        await nav.share({ files: [file], title: "ذو القرنين" });
+        await nav.share({ files: [file], title: SITE_TITLE, text: SITE_TEXT, url: window.location.origin });
         return;
-      } catch {
-        // user cancelled or share failed — fall through to download
+      } catch (err: any) {
+        if (err?.name === "AbortError") return; // المستخدم لغى
       }
     }
-    const a = document.createElement("a");
-    a.href = previewUrl!;
-    a.download = "dhualqarnayn.png";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    download();
+  }
+
+  async function copyLink() {
+    const link = window.location.origin;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   function close() {
@@ -60,6 +85,16 @@ export default function ShareButton({ data, label = "مشاركة", compact }: S
     setPreviewUrl(null);
     setBlob(null);
   }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const link = encodeURIComponent(origin);
+  const msg = encodeURIComponent(SITE_TEXT);
+  const targets = [
+    { name: "واتساب", href: `https://wa.me/?text=${msg}%20${link}` },
+    { name: "تيليجرام", href: `https://t.me/share/url?url=${link}&text=${msg}` },
+    { name: "فيسبوك", href: `https://www.facebook.com/sharer/sharer.php?u=${link}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${link}&text=${msg}` },
+  ];
 
   return (
     <>
@@ -92,7 +127,7 @@ export default function ShareButton({ data, label = "مشاركة", compact }: S
         <div
           onClick={close}
           className="fixed inset-0 z-50 flex items-center justify-center p-5"
-          style={{ background: "rgba(2,6,12,0.85)", backdropFilter: "blur(6px)" }}
+          style={{ background: "rgba(2,6,12,0.85)", backdropFilter: "blur(6px)", overflowY: "auto" }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -106,6 +141,7 @@ export default function ShareButton({ data, label = "مشاركة", compact }: S
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={previewUrl} alt="صورة للمشاركة" className="w-full h-auto block" />
             </div>
+
             <div className="flex items-center gap-2.5 w-full">
               <button
                 onClick={close}
@@ -121,6 +157,30 @@ export default function ShareButton({ data, label = "مشاركة", compact }: S
               >
                 <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 13, fontWeight: 700 }}>
                   مشاركة / تنزيل
+                </span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 w-full" dir="rtl">
+              {targets.map((t) => (
+                <a
+                  key={t.name}
+                  href={t.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 rounded-xl text-center active:scale-95 transition-transform"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.18)", textDecoration: "none" }}
+                >
+                  <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12 }}>{t.name}</span>
+                </a>
+              ))}
+              <button
+                onClick={copyLink}
+                className="col-span-2 py-2.5 rounded-xl text-center active:scale-95 transition-transform"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.18)" }}
+              >
+                <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12 }}>
+                  {copied ? "تم النسخ ✓" : "نسخ رابط الموقع"}
                 </span>
               </button>
             </div>
