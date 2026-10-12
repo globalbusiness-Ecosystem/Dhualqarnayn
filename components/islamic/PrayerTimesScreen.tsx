@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import { usePrayerTimes } from "@/contexts/prayer-times-context";
+import { PRAYER_METHODS, getMethodSetting, setMethodSetting, type MethodSetting } from "@/lib/prayer-times";
 import { PRAYERS, toArDigits as toAr, getCurrentPrayerIdx } from "@/lib/prayer-times";
 
 interface Props {
@@ -68,7 +69,9 @@ function PrayerGlyph({ name, color }: { name: string; color: string }) {
 
 export default function PrayerTimesScreen({ onBack, onOpenAdhan }: Props) {
   const { locale } = useLanguage();
-  const { version: prayerVersion, status: prayerStatus } = usePrayerTimes();
+  const { version: prayerVersion, status: prayerStatus, refresh: refreshPrayers } = usePrayerTimes();
+  const [method, setMethod] = useState<MethodSetting>("auto");
+  useEffect(() => setMethod(getMethodSetting()), []);
   const isAr = locale === "ar";
   const [idx, setIdx] = useState(0);
   const [countdown, setCountdown] = useState({ hrs: 0, mins: 0 });
@@ -153,6 +156,27 @@ export default function PrayerTimesScreen({ onBack, onOpenAdhan }: Props) {
             {isAr ? "المواقيت تقريبية — تعذّر التحميل، تأكد من الإنترنت وصلاحية الموقع" : "Times are approximate — could not load; check your connection and location permission"}
           </p>
         )}
+
+        <div className="mb-3 flex items-center gap-2">
+          <label style={{ fontFamily: "'Tajawal', sans-serif", color: "#9A8060", fontSize: 11, flexShrink: 0 }}>
+            {isAr ? "طريقة الحساب" : "Method"}
+          </label>
+          <select
+            value={String(method)}
+            onChange={(e) => {
+              const v: MethodSetting = e.target.value === "auto" ? "auto" : Number(e.target.value);
+              setMethod(v);
+              setMethodSetting(v);
+              refreshPrayers();
+            }}
+            className="flex-1 rounded-lg px-2 py-2"
+            style={{ background: "rgba(5,12,22,0.9)", border: "1px solid rgba(201,168,76,0.2)", color: "#F5ECD7", fontFamily: "'Tajawal', sans-serif", fontSize: 12 }}
+          >
+            {PRAYER_METHODS.map((m) => (
+              <option key={String(m.id)} value={String(m.id)}>{isAr ? m.ar : m.en}</option>
+            ))}
+          </select>
+        </div>
 
         {/* Prayer list */}
         <div className="flex flex-col gap-2">

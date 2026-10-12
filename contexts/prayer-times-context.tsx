@@ -1,18 +1,22 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { loadPrayerTimes, type PrayerStatus } from "@/lib/prayer-times";
 
 interface PrayerTimesValue {
   /** Bumps whenever PRAYERS is updated — reading it makes a component re-render. */
   version: number;
   status: PrayerStatus;
+  /** Re-fetch timings (e.g. after the calculation method changes). */
+  refresh: () => void;
 }
 
-const PrayerTimesContext = createContext<PrayerTimesValue>({ version: 0, status: "fallback" });
+const PrayerTimesContext = createContext<PrayerTimesValue>({ version: 0, status: "fallback", refresh: () => {} });
 
 export function PrayerTimesProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PrayerTimesValue>({ version: 0, status: "loading" });
+  const [state, setState] = useState<{ version: number; status: PrayerStatus }>({ version: 0, status: "loading" });
+  const [tick, setTick] = useState(0);
+  const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,9 +35,10 @@ export function PrayerTimesProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       clearInterval(t);
     };
-  }, []);
+  }, [tick]);
 
-  return <PrayerTimesContext.Provider value={state}>{children}</PrayerTimesContext.Provider>;
+  const value = useMemo(() => ({ ...state, refresh }), [state, refresh]);
+  return <PrayerTimesContext.Provider value={value}>{children}</PrayerTimesContext.Provider>;
 }
 
 export const usePrayerTimes = () => useContext(PrayerTimesContext);

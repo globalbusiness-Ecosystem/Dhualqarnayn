@@ -113,6 +113,9 @@ importers:
       geist:
         specifier: latest
         version: 1.7.2(next@16.2.9(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
+      geomagnetism:
+        specifier: ^0.2.0
+        version: 0.2.0
       input-otp:
         specifier: 1.4.1
         version: 1.4.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1392,6 +1395,9 @@ packages:
     resolution: {integrity: sha512-Gu5lDFa3pLRyoBlBPf0QIFHVdWAnpco7fS1bJm41jyLPFoguBgiubseUN2oLXMgqZ7uxAxDoXcHMhCY/fOTTgg==}
     peerDependencies:
       next: '>=13.2.0'
+
+  geomagnetism@0.2.0:
+    resolution: {integrity: sha512-dO8HJrXqah244nMe+pU5m52L90SMoi4lDA0AV3xunRxogloYV+s3aYWCW72VMMfiYis+YSAlhoKktw8aLMiJbw==}
 
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
@@ -2895,6 +2901,8 @@ snapshots:
   geist@1.7.2(next@16.2.9(react-dom@19.0.0(react@19.0.0))(react@19.0.0)):
     dependencies:
       next: 16.2.9(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+
+  geomagnetism@0.2.0: {}
 
   get-nonce@1.0.1: {}
 

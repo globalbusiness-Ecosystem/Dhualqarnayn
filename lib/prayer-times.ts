@@ -30,9 +30,81 @@ const ALADHAN_KEYS: Record<string, string> = {
   isha: "Isha",
 };
 
-// Calculation method: 5 = Egyptian General Authority of Survey.
-// Other common ones: 4 = Umm al-Qura, 3 = MWL, 2 = ISNA, 1 = Karachi.
-export const PRAYER_METHOD = 5;
+// Calculation methods (Aladhan ids). "auto" picks the method used in the
+// user's own region from the device time zone, so Cairo, Riyadh, Karachi,
+// Istanbul, Jakarta, London and New York each get their local convention.
+export type MethodSetting = "auto" | number;
+
+export const PRAYER_METHODS: { id: MethodSetting; ar: string; en: string }[] = [
+  { id: "auto", ar: "تلقائي حسب بلدك", en: "Automatic (by region)" },
+  { id: 5, ar: "الهيئة المصرية العامة للمساحة", en: "Egyptian General Authority" },
+  { id: 4, ar: "أم القرى - مكة المكرمة", en: "Umm al-Qura, Makkah" },
+  { id: 3, ar: "رابطة العالم الإسلامي", en: "Muslim World League" },
+  { id: 2, ar: "أمريكا الشمالية (ISNA)", en: "ISNA (North America)" },
+  { id: 1, ar: "جامعة العلوم الإسلامية - كراتشي", en: "Univ. of Islamic Sciences, Karachi" },
+  { id: 13, ar: "رئاسة الشؤون الدينية - تركيا", en: "Diyanet (Turkey)" },
+  { id: 16, ar: "دبي", en: "Dubai" },
+  { id: 9, ar: "الكويت", en: "Kuwait" },
+  { id: 10, ar: "قطر", en: "Qatar" },
+  { id: 8, ar: "منطقة الخليج", en: "Gulf Region" },
+  { id: 23, ar: "الأردن", en: "Jordan" },
+  { id: 21, ar: "المغرب", en: "Morocco" },
+  { id: 19, ar: "الجزائر", en: "Algeria" },
+  { id: 18, ar: "تونس", en: "Tunisia" },
+  { id: 12, ar: "فرنسا (UOIF)", en: "France (UOIF)" },
+  { id: 11, ar: "سنغافورة", en: "Singapore (MUIS)" },
+  { id: 17, ar: "ماليزيا (JAKIM)", en: "Malaysia (JAKIM)" },
+  { id: 20, ar: "إندونيسيا (Kemenag)", en: "Indonesia (Kemenag)" },
+  { id: 7, ar: "جامعة طهران", en: "Univ. of Tehran" },
+];
+
+const TZ_METHOD: Record<string, number> = {
+  "Africa/Cairo": 5,
+  "Asia/Riyadh": 4, "Asia/Aden": 4,
+  "Asia/Dubai": 16,
+  "Asia/Kuwait": 9,
+  "Asia/Qatar": 10,
+  "Asia/Bahrain": 8, "Asia/Muscat": 8,
+  "Asia/Amman": 23,
+  "Africa/Casablanca": 21,
+  "Africa/Algiers": 19,
+  "Africa/Tunis": 18,
+  "Europe/Paris": 12,
+  "Europe/Istanbul": 13, "Asia/Istanbul": 13,
+  "Asia/Singapore": 11,
+  "Asia/Kuala_Lumpur": 17, "Asia/Kuching": 17,
+  "Asia/Jakarta": 20, "Asia/Makassar": 20, "Asia/Jayapura": 20, "Asia/Pontianak": 20,
+  "Asia/Tehran": 7,
+  "Asia/Karachi": 1, "Asia/Kolkata": 1, "Asia/Calcutta": 1, "Asia/Dhaka": 1, "Asia/Kabul": 1,
+};
+
+export function methodFromTimeZone(tz?: string): number {
+  const zone = tz ?? (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "");
+  if (zone && TZ_METHOD[zone] != null) return TZ_METHOD[zone];
+  if (zone.startsWith("America/") || zone.startsWith("US/") || zone === "Pacific/Honolulu") return 2; // ISNA
+  return 3; // Muslim World League — the most widely used default elsewhere
+}
+
+const METHOD_KEY = "dq_prayer_method";
+
+export function getMethodSetting(): MethodSetting {
+  try {
+    const v = localStorage.getItem(METHOD_KEY);
+    if (v && v !== "auto" && Number.isFinite(+v)) return +v;
+  } catch {}
+  return "auto";
+}
+
+export function setMethodSetting(v: MethodSetting) {
+  try {
+    localStorage.setItem(METHOD_KEY, String(v));
+  } catch {}
+}
+
+export function resolveMethod(setting: MethodSetting = getMethodSetting()): number {
+  return setting === "auto" ? methodFromTimeZone() : setting;
+}
+
 const FALLBACK_COORDS = { lat: 30.0444, lng: 31.2357 }; // Cairo
 const CACHE_KEY = "dq_prayer_cache_v1";
 const COORDS_KEY = "dq_prayer_coords_v1";
@@ -85,7 +157,8 @@ export async function loadPrayerTimes(): Promise<PrayerStatus> {
   const { lat, lng } = await getCoords();
   const d = new Date();
   const dateKey = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
-  const cacheId = `${dateKey}|${lat.toFixed(2)}|${lng.toFixed(2)}|${PRAYER_METHOD}`;
+  const method = resolveMethod();
+  const cacheId = `${dateKey}|${lat.toFixed(2)}|${lng.toFixed(2)}|${method}`;
 
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
@@ -95,7 +168,7 @@ export async function loadPrayerTimes(): Promise<PrayerStatus> {
     }
   } catch {}
 
-  const url = `https://api.aladhan.com/v1/timings/${dateKey}?latitude=${lat}&longitude=${lng}&method=${PRAYER_METHOD}`;
+  const url = `https://api.aladhan.com/v1/timings/${dateKey}?latitude=${lat}&longitude=${lng}&method=${method}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("aladhan-failed");
   const json = await res.json();

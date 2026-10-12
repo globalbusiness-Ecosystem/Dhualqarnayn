@@ -76,6 +76,11 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
   const alignedVibrated = useRef(false);
   // Low-pass filter state: `h` is the smoothed heading (0-360), `cum` the un-wrapped total.
   const smoothRef = useRef<{ h: number; cum: number } | null>(null);
+  // Magnetic declination (degrees, east positive). Phone sensors point to
+  // MAGNETIC north but the Qibla bearing is relative to TRUE north; the gap
+  // ranges from ~0 to 20+ degrees depending on where in the world you are.
+  const declRef = useRef(0);
+  const [declination, setDeclination] = useState<number | null>(null);
 
   useEffect(() => {
     setSecure(typeof window !== "undefined" ? window.isSecureContext !== false : true);
@@ -159,7 +164,7 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
     let source: HeadingSource = "relative";
 
     if (typeof ev.webkitCompassHeading === "number") {
-      // iOS Safari: compass heading (magnetic north, not corrected for declination).
+      // iOS Safari: compass heading relative to magnetic north (declination is added below).
       h = ev.webkitCompassHeading;
       source = "absolute";
     } else if (ev.alpha != null) {
@@ -168,7 +173,7 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
       source = ev.absolute || activeEventRef.current === "abs" ? "absolute" : "relative";
     }
     if (h != null) {
-      applyHeading(((h % 360) + 360) % 360, source);
+      applyHeading((((h + declRef.current) % 360) + 360) % 360, source);
     }
   };
 
@@ -234,6 +239,16 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
     activeEventRef.current = null;
   };
 
+  // Android/Chrome expose the sensor without a permission prompt, so start it
+  // automatically. iOS needs a tap (permission must come from a user gesture).
+  useEffect(() => {
+    const DOE: any = typeof window !== "undefined" ? (window as any).DeviceOrientationEvent : undefined;
+    if (DOE && typeof DOE.requestPermission !== "function" && window.isSecureContext !== false) {
+      enableCompass();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const submitManual = () => {
     const lat = parseFloat(manualLat);
     const lon = parseFloat(manualLon);
@@ -252,6 +267,26 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
       setCompassError(null);
     }
   };
+
+  useEffect(() => {
+    if (!coords) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        // @ts-ignore - package ships without type declarations
+        const mod: any = await import("geomagnetism");
+        const geo = mod.default ?? mod;
+        const d = geo.model().point([coords.lat, coords.lon]).decl;
+        if (!cancelled && Number.isFinite(d)) {
+          declRef.current = d;
+          setDeclination(d);
+        }
+      } catch {
+        // Offline model unavailable - fall back to uncorrected (magnetic) heading.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [coords]);
 
   const bearing = useMemo(() => (coords ? qiblaBearing(coords.lat, coords.lon) : null), [coords]);
   const distance = useMemo(() => (coords ? distanceToKaaba(coords.lat, coords.lon) : null), [coords]);
@@ -438,6 +473,9 @@ export default function QiblaCompass({ onBack }: { onBack?: () => void }) {
               <div className="w-full rounded-xl p-3.5 flex flex-col gap-1.5" style={{ background: "rgba(10,18,32,0.75)", border: "1px solid rgba(201,168,76,0.12)" }}>
                 <Row label="اتجاه القبلة من الشمال" value={bearing != null ? `${toArNum(Math.round(bearing))}°` : "—"} />
                 {heading != null && <Row label="اتجاه بوصلة جهازك" value={`${toArNum(Math.round(heading))}°`} />}
+                {declination != null && Math.abs(declination) >= 0.5 && (
+                  <Row label="تصحيح الانحراف المغناطيسي" value={`${declination > 0 ? "+" : "−"}${toArNum(Math.abs(declination).toFixed(1))}°`} />
+                )}
                 {distance != null && <Row label="المسافة إلى الكعبة المشرفة" value={`${toArNum(Math.round(distance).toLocaleString("en-US"))} كم`} />}
                 {headingSource && (
                   <Row

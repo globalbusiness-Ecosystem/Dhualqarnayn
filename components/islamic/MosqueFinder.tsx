@@ -2,19 +2,10 @@
 
 import { useCallback, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
+import { searchMosques, type Mosque } from "@/lib/mosques";
 
 interface Props {
   onBack: () => void;
-}
-
-interface Mosque {
-  id: string;
-  lat: number;
-  lon: number;
-  name: string | null;
-  address: string | null;
-  distanceKm: number;
-  distanceM: number;
 }
 
 type Status = "idle" | "locating" | "loading" | "done" | "denied" | "error";
@@ -35,10 +26,16 @@ export default function MosqueFinder({ onBack }: Props) {
       setStatus("loading");
       try {
         const { latitude, longitude } = pos.coords;
-        const res = await fetch(`/api/mosques?lat=${latitude}&lon=${longitude}`);
-        if (!res.ok) throw new Error("failed");
-        const data = await res.json();
-        setMosques(data.mosques || []);
+        let list: Mosque[];
+        try {
+          const res = await fetch(`/api/mosques?lat=${latitude}&lon=${longitude}`);
+          if (!res.ok) throw new Error("server-failed");
+          list = (await res.json()).mosques || [];
+        } catch {
+          // Server couldn't reach OpenStreetMap — ask it directly from this device.
+          list = await searchMosques(latitude, longitude);
+        }
+        setMosques(list);
         setStatus("done");
       } catch {
         setStatus("error");
