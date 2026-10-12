@@ -36,7 +36,7 @@ const ENDPOINT_GROUPS = [
 const RADII = [1500, 6000, 25000];
 const ENOUGH = 5;
 const RESULT_LIMIT = 30;
-const REQUEST_TIMEOUT = 9000;
+const REQUEST_TIMEOUT = 12000;
 
 /** Resolves with the first promise that succeeds; rejects only if all fail. */
 export function firstSuccess<T>(promises: Promise<T>[]): Promise<T> {
@@ -83,7 +83,12 @@ async function fetchOne(endpoint: string, query: string, timeoutMs: number): Pro
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`${new URL(endpoint).host}:${res.status}`);
-    const json = (await res.json()) as { elements?: OverpassElement[] };
+    const json = (await res.json()) as { elements?: OverpassElement[]; remark?: string };
+    // Overloaded servers answer 200 with a "runtime error" remark and PARTIAL
+    // results; treat that as a failure so another server/radius is tried.
+    if (json.remark && /runtime error|timed out|out of memory/i.test(json.remark)) {
+      throw new Error("overpass-partial");
+    }
     return json.elements ?? [];
   } finally {
     clearTimeout(timer);
@@ -91,10 +96,12 @@ async function fetchOne(endpoint: string, query: string, timeoutMs: number): Pro
 }
 
 async function queryOverpass(lat: number, lon: number, radius: number, deadline: number): Promise<OverpassElement[]> {
-  const query = `[out:json][timeout:12];
+  const query = `[out:json][timeout:10];
 (
   nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
   nwr["building"="mosque"](around:${radius},${lat},${lon});
+  nwr["amenity"="mosque"](around:${radius},${lat},${lon});
+  nwr["amenity"="place_of_worship"]["name"~"مسجد|جامع|masjid|mosque",i](around:${radius},${lat},${lon});
 );
 out center tags 250;`;
 

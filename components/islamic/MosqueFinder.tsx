@@ -34,7 +34,7 @@ export default function MosqueFinder({ onBack }: Props) {
         // Ask our server AND this device at the same time; the first answer wins.
         const list = await firstSuccess([
           fromServer(),
-          searchMosques(latitude, longitude, { deadlineMs: 20000 }),
+          searchMosques(latitude, longitude, { deadlineMs: 28000 }),
         ]);
         setMosques(list);
         setStatus("done");
