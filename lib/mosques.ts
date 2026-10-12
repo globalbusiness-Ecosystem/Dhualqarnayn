@@ -53,6 +53,39 @@ export function firstSuccess<T>(promises: Promise<T>[]): Promise<T> {
   });
 }
 
+/**
+ * Like firstSuccess, but prefers a NON-EMPTY answer: an overloaded or blocking
+ * server sometimes returns a fast, "successful" empty list, which must not
+ * beat a slower correct answer. Resolves with [] only if every source that
+ * answered said empty; rejects only if all fail.
+ */
+export function firstNonEmpty<T>(promises: Promise<T[]>[]): Promise<T[]> {
+  return new Promise<T[]>((resolve, reject) => {
+    let settled = 0;
+    let sawEmpty = false;
+    let lastError: unknown = new Error("no-promises");
+    const done = () => {
+      if (++settled < promises.length) return;
+      if (sawEmpty) resolve([]);
+      else reject(lastError);
+    };
+    if (promises.length === 0) reject(lastError);
+    promises.forEach((p) =>
+      p.then(
+        (list) => {
+          if (list.length > 0) resolve(list);
+          else sawEmpty = true;
+          done();
+        },
+        (err) => {
+          lastError = err;
+          done();
+        }
+      )
+    );
+  });
+}
+
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -125,16 +158,20 @@ async function queryOverpass(
 out center tags 250;`;
 
   let lastError: unknown = new Error("unavailable");
+  let sawEmpty = false;
   for (const group of ENDPOINT_GROUPS) {
     const remaining = deadline - Date.now();
     if (remaining < 1500) break;
     const timeout = Math.min(REQUEST_TIMEOUT, remaining);
     try {
-      return await firstSuccess(group.map((e) => fetchOne(e, query, timeout, trace)));
+      const list = await firstNonEmpty(group.map((e) => fetchOne(e, query, timeout, trace)));
+      if (list.length > 0) return list;
+      sawEmpty = true; // maybe a truly empty area, maybe a false empty: ask the other servers too
     } catch (err) {
       lastError = err;
     }
   }
+  if (sawEmpty) return [];
   throw lastError;
 }
 

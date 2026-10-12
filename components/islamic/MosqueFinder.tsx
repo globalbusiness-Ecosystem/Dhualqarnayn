@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
-import { searchMosques, firstSuccess, type Mosque } from "@/lib/mosques";
+import { searchMosques, firstNonEmpty, type Mosque } from "@/lib/mosques";
 
 interface Props {
   onBack: () => void;
@@ -15,6 +15,7 @@ export default function MosqueFinder({ onBack }: Props) {
   const isAr = locale === "ar";
   const [status, setStatus] = useState<Status>("idle");
   const [errDetail, setErrDetail] = useState("");
+  const [where, setWhere] = useState<{ lat: number; lon: number; acc: number } | null>(null);
   const [mosques, setMosques] = useState<Mosque[]>([]);
 
   const search = useCallback(() => {
@@ -27,13 +28,14 @@ export default function MosqueFinder({ onBack }: Props) {
       setStatus("loading");
       try {
         const { latitude, longitude } = pos.coords;
+        setWhere({ lat: latitude, lon: longitude, acc: Math.round(pos.coords.accuracy || 0) });
         const fromServer = async (): Promise<Mosque[]> => {
           const res = await fetch(`/api/mosques?lat=${latitude}&lon=${longitude}`);
           if (!res.ok) throw new Error("server-failed");
           return (await res.json()).mosques || [];
         };
         // Ask our server AND this device at the same time; the first answer wins.
-        const list = await firstSuccess([
+        const list = await firstNonEmpty([
           fromServer(),
           searchMosques(latitude, longitude, { deadlineMs: 28000 }),
         ]);
@@ -232,6 +234,25 @@ export default function MosqueFinder({ onBack }: Props) {
                 ? "البيانات من خريطة المجتمع المفتوحة (OpenStreetMap) وقد لا تغطي كل المساجد في منطقتك."
                 : "Data from the open community map (OpenStreetMap) and may not cover every mosque in your area."}
             </p>
+
+            {where && (
+              <>
+                <a
+                  href={`https://www.google.com/maps/search/mosque/@${where.lat},${where.lon},14z`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center mt-4 mx-auto px-5 py-2.5 rounded-xl active:scale-95"
+                  style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)", maxWidth: 260 }}
+                >
+                  <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12.5, fontWeight: 700 }}>
+                    {isAr ? "ابحث أيضاً في خرائط جوجل" : "Also search in Google Maps"}
+                  </span>
+                </a>
+                <p dir="ltr" className="text-center mt-3" style={{ color: "#4A3C28", fontSize: 10 }}>
+                  {where.lat.toFixed(4)}, {where.lon.toFixed(4)} · ±{where.acc} m
+                </p>
+              </>
+            )}
           </>
         )}
       </div>
