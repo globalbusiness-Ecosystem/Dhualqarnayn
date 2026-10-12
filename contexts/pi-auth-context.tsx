@@ -21,6 +21,7 @@ export type ProductList = { products: Product[]; };
 
 interface PiAuthContextType {
   isAuthenticated: boolean;
+  isGuest: boolean;
   authMessage: string;
   hasError: boolean;
   piAccessToken: string | null;
@@ -32,6 +33,11 @@ interface PiAuthContextType {
 }
 
 const PiAuthContext = createContext<PiAuthContextType | undefined>(undefined);
+
+const APP_ID = process.env.NEXT_PUBLIC_PI_APP_ID || "dhualqarnayn";
+
+const isPiBrowser = (): boolean =>
+  typeof navigator !== "undefined" && /PiBrowser/i.test(navigator.userAgent);
 
 const loadPiSDK = (): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -47,6 +53,7 @@ const loadPiSDK = (): Promise<void> => {
 
 export function PiAuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [authMessage, setAuthMessage] = useState("جارٍ التهيئة...");
   const [hasError, setHasError] = useState(false);
   const [piAccessToken, setPiAccessToken] = useState<string | null>(null);
@@ -55,9 +62,32 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
   const [appId, setAppId] = useState<string | null>(null);
   const [products] = useState<Product[] | null>([]);
 
+  const enterAsGuest = () => {
+    setUserData({
+      id: "guest",
+      username: "زائر",
+      credits_balance: 0,
+      terms_accepted: true,
+      app_id: APP_ID,
+    });
+    setAppId(APP_ID);
+    setPiAccessToken(null);
+    setHasError(false);
+    setError(null);
+    setIsGuest(true);
+    setIsAuthenticated(true);
+  };
+
   const initializePiAndAuthenticate = async () => {
     setError(null);
     setHasError(false);
+
+    // متصفح عادي (كروم، سفاري، فايرفوكس...): ادخل كزائر بدون Pi
+    if (!isPiBrowser()) {
+      enterAsGuest();
+      return;
+    }
+
     try {
       setAuthMessage("جارٍ تحميل Pi SDK...");
       await loadPiSDK();
@@ -70,20 +100,16 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
       const auth = await Pi.authenticate(
         ["username", "payments"],
         async (payment: any) => {
-          // معالجة الـ incomplete payments
           console.log("Incomplete payment found:", payment?.identifier);
           if (!payment?.identifier) return;
-          
           try {
-            // approve ثم complete الـ payment العالق
-            await fetch(`/api/payments/${payment.identifier}/approve`, { 
-              method: 'POST' 
+            await fetch(`/api/payments/${payment.identifier}/approve`, {
+              method: "POST",
             });
-            
             if (payment?.transaction?.txid) {
               await fetch(`/api/payments/${payment.identifier}/complete`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ txid: payment.transaction.txid }),
               });
             }
@@ -101,16 +127,15 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
         username: auth.user?.username || "pi_user",
         credits_balance: 0,
         terms_accepted: true,
-        app_id: process.env.NEXT_PUBLIC_PI_APP_ID || "dhualqarnayn",
+        app_id: APP_ID,
       });
-      setAppId(process.env.NEXT_PUBLIC_PI_APP_ID || "dhualqarnayn");
+      setAppId(APP_ID);
+      setIsGuest(false);
       setIsAuthenticated(true);
     } catch (err: any) {
       console.error("Pi auth error:", err);
-      setHasError(true);
-      const msg = `Authentication error: ${err?.message || "Request failed"}`;
-      setAuthMessage(msg);
-      setError(msg);
+      // حتى لو فشل Pi، الموقع يفتح كزائر بدل ما يفضل واقف
+      enterAsGuest();
     }
   };
 
@@ -118,7 +143,7 @@ export function PiAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <PiAuthContext.Provider value={{
-      isAuthenticated, authMessage, hasError,
+      isAuthenticated, isGuest, authMessage, hasError,
       piAccessToken, userData, error,
       reinitialize: initializePiAndAuthenticate,
       appId, products,
