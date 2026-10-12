@@ -19,6 +19,45 @@ export default function SidebarMenu({ isOpen, onClose, onNavigate, onInstall, ac
   const [langOpen, setLangOpen] = useState(false);
   const info = getLocaleInfo(locale);
   const { mode, setMode } = useThemeMode();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const SHARE_TEXT = "ذو القرنين - بوابتك الإسلامية الشاملة";
+  const getShareUrl = () => (typeof window !== "undefined" ? window.location.origin : "");
+  const handleShareApp = async () => {
+    const url = getShareUrl();
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+    if (nav.share) {
+      try {
+        await nav.share({ title: "ذو القرنين", text: SHARE_TEXT, url });
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+    setShareOpen((v) => !v);
+  };
+  const copyShareLink = async () => {
+    const url = getShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  };
+  const shareLinks = [
+    { name: "واتساب", href: "https://wa.me/?text=" + encodeURIComponent(SHARE_TEXT + " " + getShareUrl()) },
+    { name: "تيليجرام", href: "https://t.me/share/url?url=" + encodeURIComponent(getShareUrl()) + "&text=" + encodeURIComponent(SHARE_TEXT) },
+    { name: "فيسبوك", href: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(getShareUrl()) },
+    { name: "X", href: "https://twitter.com/intent/tweet?url=" + encodeURIComponent(getShareUrl()) + "&text=" + encodeURIComponent(SHARE_TEXT) },
+  ];
+
 
   const MODE_OPTIONS: { key: ThemeMode; label: string; icon: string }[] = [
     { key: "auto",  label: t("theme_auto"),  icon: "◐" },
@@ -209,6 +248,56 @@ export default function SidebarMenu({ isOpen, onClose, onNavigate, onInstall, ac
               </p>
             </div>
           </button>
+
+          {/* Share app */}
+          <button
+            onClick={handleShareApp}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mt-1.5 text-right transition-all active:scale-95"
+            style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.26)" }}
+          >
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0"
+              style={{ background: "rgba(201,168,76,0.16)", border: "1px solid rgba(201,168,76,0.32)" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+              </svg>
+            </div>
+            <div className="flex-1 text-right">
+              <p style={{ fontFamily: "'Tajawal', sans-serif", fontWeight: 600, color: "#C9A84C", fontSize: 13 }}>
+                مشاركة التطبيق
+              </p>
+              <p style={{ fontFamily: "'Tajawal', sans-serif", color: "#8A7858", fontSize: 10, marginTop: 1 }}>
+                شارك ذو القرنين مع أصدقائك
+              </p>
+            </div>
+          </button>
+          {shareOpen && (
+            <div className="grid grid-cols-2 gap-2 mt-2" dir="rtl">
+              {shareLinks.map((l) => (
+                <a
+                  key={l.name}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 rounded-xl text-center active:scale-95 transition-transform"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.18)", textDecoration: "none" }}
+                >
+                  <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12 }}>{l.name}</span>
+                </a>
+              ))}
+              <button
+                onClick={copyShareLink}
+                className="col-span-2 py-2.5 rounded-xl text-center active:scale-95 transition-transform"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.18)" }}
+              >
+                <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12 }}>
+                  {shareCopied ? "تم النسخ ✓" : "نسخ الرابط"}
+                </span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Pi Network badge */}
