@@ -10,13 +10,36 @@
   "theme_color": "#0D1B2A",
   "dir": "rtl",
   "lang": "ar",
-  "categories": ["education", "lifestyle", "reference"],
+  "categories": [
+    "education",
+    "lifestyle",
+    "reference"
+  ],
   "id": "/",
   "icons": [
     {
-      "src": "/icon-dark-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/apple-icon.png",
@@ -26,27 +49,9 @@
     },
     {
       "src": "/icon.svg",
-      "sizes": "192x192",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ],
   "screenshots": []
