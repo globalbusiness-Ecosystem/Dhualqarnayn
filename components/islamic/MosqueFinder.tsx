@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
-import { searchMosques, type Mosque } from "@/lib/mosques";
+import { searchMosques, firstSuccess, type Mosque } from "@/lib/mosques";
 
 interface Props {
   onBack: () => void;
@@ -26,15 +26,16 @@ export default function MosqueFinder({ onBack }: Props) {
       setStatus("loading");
       try {
         const { latitude, longitude } = pos.coords;
-        let list: Mosque[];
-        try {
+        const fromServer = async (): Promise<Mosque[]> => {
           const res = await fetch(`/api/mosques?lat=${latitude}&lon=${longitude}`);
           if (!res.ok) throw new Error("server-failed");
-          list = (await res.json()).mosques || [];
-        } catch {
-          // Server couldn't reach OpenStreetMap — ask it directly from this device.
-          list = await searchMosques(latitude, longitude);
-        }
+          return (await res.json()).mosques || [];
+        };
+        // Ask our server AND this device at the same time; the first answer wins.
+        const list = await firstSuccess([
+          fromServer(),
+          searchMosques(latitude, longitude, { deadlineMs: 20000 }),
+        ]);
         setMosques(list);
         setStatus("done");
       } catch {

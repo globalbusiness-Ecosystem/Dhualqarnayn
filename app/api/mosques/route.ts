@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const mosques = await searchMosques(lat, lon);
+    const mosques = await searchMosques(lat, lon, { deadlineMs: 22000 });
     return NextResponse.json({ mosques });
   } catch (err) {
     return NextResponse.json({ error: "unavailable", detail: String(err) }, { status: 502 });
