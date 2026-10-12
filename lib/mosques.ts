@@ -63,7 +63,14 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-async function fetchOne(endpoint: string, query: string, timeoutMs: number): Promise<OverpassElement[]> {
+// Shared per-search diagnostics: why servers failed, and partial answers.
+interface Trace {
+  reasons: string[];
+  partial: OverpassElement[][];
+}
+
+async function fetchOne(endpoint: string, query: string, timeoutMs: number, trace: Trace): Promise<OverpassElement[]> {
+  const host = new URL(endpoint).host;
   const headers: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
     Accept: "application/json",
@@ -82,20 +89,32 @@ async function fetchOne(endpoint: string, query: string, timeoutMs: number): Pro
       signal: ctrl.signal,
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`${new URL(endpoint).host}:${res.status}`);
+    if (!res.ok) throw new Error(`${host} HTTP ${res.status}`);
     const json = (await res.json()) as { elements?: OverpassElement[]; remark?: string };
+    const elements = json.elements ?? [];
     // Overloaded servers answer 200 with a "runtime error" remark and PARTIAL
-    // results; treat that as a failure so another server/radius is tried.
+    // results. Try other servers first, but keep the partial list as a last resort.
     if (json.remark && /runtime error|timed out|out of memory/i.test(json.remark)) {
-      throw new Error("overpass-partial");
+      if (elements.length) trace.partial.push(elements);
+      throw new Error(`${host} overloaded`);
     }
-    return json.elements ?? [];
+    return elements;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    trace.reasons.push(/abort/i.test(msg) ? `${host} timeout` : msg);
+    throw err;
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function queryOverpass(lat: number, lon: number, radius: number, deadline: number): Promise<OverpassElement[]> {
+async function queryOverpass(
+  lat: number,
+  lon: number,
+  radius: number,
+  deadline: number,
+  trace: Trace
+): Promise<OverpassElement[]> {
   const query = `[out:json][timeout:10];
 (
   nwr["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lon});
@@ -111,7 +130,7 @@ out center tags 250;`;
     if (remaining < 1500) break;
     const timeout = Math.min(REQUEST_TIMEOUT, remaining);
     try {
-      return await firstSuccess(group.map((e) => fetchOne(e, query, timeout)));
+      return await firstSuccess(group.map((e) => fetchOne(e, query, timeout, trace)));
     } catch (err) {
       lastError = err;
     }
@@ -126,22 +145,30 @@ export async function searchMosques(
 ): Promise<Mosque[]> {
   const deadline = Date.now() + (opts.deadlineMs ?? 20000);
   const maxRadius = opts.maxRadius ?? 25000;
+  const trace: Trace = { reasons: [], partial: [] };
   let elements: OverpassElement[] = [];
   let anySuccess = false;
-  let lastError: unknown = null;
 
   for (const radius of RADII.filter((r) => r <= maxRadius)) {
     if (Date.now() > deadline - 1500) break;
     try {
-      elements = await queryOverpass(lat, lon, radius, deadline);
+      elements = await queryOverpass(lat, lon, radius, deadline, trace);
       anySuccess = true;
       if (elements.length >= ENOUGH) break;
-    } catch (err) {
-      lastError = err;
+    } catch {
       if (anySuccess) break; // keep what an earlier radius found
     }
   }
-  if (!anySuccess) throw lastError ?? new Error("timeout");
+
+  if (!anySuccess) {
+    // No server gave a complete answer — better a partial list than nothing.
+    const best = trace.partial.sort((a, b) => b.length - a.length)[0];
+    if (!best) {
+      const why = Array.from(new Set(trace.reasons)).slice(0, 4).join(" | ");
+      throw new Error(why || "timeout");
+    }
+    elements = best;
+  }
 
   const seen = new Set<string>();
   return elements

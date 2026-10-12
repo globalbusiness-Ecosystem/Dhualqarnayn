@@ -14,6 +14,7 @@ export default function MosqueFinder({ onBack }: Props) {
   const { locale } = useLanguage();
   const isAr = locale === "ar";
   const [status, setStatus] = useState<Status>("idle");
+  const [errDetail, setErrDetail] = useState("");
   const [mosques, setMosques] = useState<Mosque[]>([]);
 
   const search = useCallback(() => {
@@ -38,7 +39,8 @@ export default function MosqueFinder({ onBack }: Props) {
         ]);
         setMosques(list);
         setStatus("done");
-      } catch {
+      } catch (e) {
+        setErrDetail(e instanceof Error ? e.message : String(e));
         setStatus("error");
       }
     };
@@ -151,6 +153,11 @@ export default function MosqueFinder({ onBack }: Props) {
             <p style={{ fontFamily: "'Tajawal', sans-serif", color: "#6A5A48", fontSize: 11.5, lineHeight: 1.7, marginBottom: 14 }}>
               {isAr ? "تحقق من اتصالك بالإنترنت وحاول مرة أخرى." : "Check your internet connection and try again."}
             </p>
+            {errDetail && (
+              <p dir="ltr" style={{ color: "#5A4A38", fontSize: 10, lineHeight: 1.5, marginBottom: 12, wordBreak: "break-word" }}>
+                {errDetail}
+              </p>
+            )}
             <button onClick={search} className="px-5 py-2.5 rounded-xl active:scale-95"
               style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)" }}>
               <span style={{ fontFamily: "'Tajawal', sans-serif", color: "#C9A84C", fontSize: 12.5, fontWeight: 700 }}>
