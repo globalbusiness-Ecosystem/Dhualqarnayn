@@ -24,6 +24,7 @@ export async function POST(
     let data;
     try { data = JSON.parse(text); } catch { data = { raw: text, status: res.status }; }
 
+    if (!res.ok) console.error("Pi approve failed", res.status, text);
     return NextResponse.json(data, { status: res.ok ? 200 : res.status });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
