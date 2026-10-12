@@ -169,6 +169,24 @@ export default function MosqueFinder({ onBack }: Props) {
           </div>
         )}
 
+        {where && (status === "done" || status === "error") && (
+          <div className="mb-4 overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(201,168,76,0.18)" }}>
+            <iframe
+              title={isAr ? "خريطة المساجد القريبة" : "Nearby mosques map"}
+              src={`https://maps.google.com/maps?q=mosque&ll=${where.lat},${where.lon}&z=14&hl=${isAr ? "ar" : "en"}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              style={{ display: "block", width: "100%", height: 420, border: 0 }}
+            />
+            <p className="text-center py-2" style={{ fontFamily: "'Tajawal', sans-serif", color: "#6A5A48", fontSize: 10 }}>
+              {isAr
+                ? "الخريطة من Google Maps — اضغط على أي مسجد لعرض التفاصيل والاتجاهات"
+                : "Map by Google Maps — tap any mosque for details and directions"}
+            </p>
+          </div>
+        )}
+
         {status === "done" && (
           <>
             <div className="flex items-center justify-between mb-3 px-1">
@@ -189,8 +207,8 @@ export default function MosqueFinder({ onBack }: Props) {
               <div className="rounded-2xl p-6 text-center" style={{ background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)" }}>
                 <p style={{ fontFamily: "'Tajawal', sans-serif", color: "#6A5A48", fontSize: 12, lineHeight: 1.8 }}>
                   {isAr
-                    ? "لم نجد مساجد مسجّلة قريبة منك في خريطة المجتمع المفتوحة. قد تكون المنطقة قليلة البيانات — جرّب البحث يدوياً في تطبيق الخرائط."
-                    : "No registered mosques were found nearby in the open community map. The area may have limited data — try searching manually in a maps app."}
+                    ? "لا توجد مساجد مسجّلة في خريطة المجتمع المفتوحة لمنطقتك. استخدم خريطة جوجل أعلاه لعرض المساجد القريبة."
+                    : "No mosques are registered in the open community map for your area. Use the Google map above to see nearby mosques."}
                 </p>
               </div>
             ) : (
